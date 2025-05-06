@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kayıt Ol</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .register-container {
+            background-color: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+            width: 320px;
+        }
+
+        .register-container h2 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .register-container input[type="text"],
+        .register-container input[type="email"],
+        .register-container input[type="password"] {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+
+        .register-container input[type="submit"] {
+            width: 100%;
+            padding: 12px;
+            background-color: #28a745;
+            border: none;
+            color: white;
+            font-size: 16px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .register-container input[type="submit"]:hover {
+            background-color: #218838;
+        }
+
+        .register-container .login-link {
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        .register-container .login-link a {
+            color: #007BFF;
+            text-decoration: none;
+        }
+
+        .register-container .login-link a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+<div class="register-container">
+    <h2>Kayıt Ol</h2>
+    <form method="POST" action="/register">
+        <input type="text" name="username" placeholder="Kullanıcı Adı" required>
+        <input type="email" name="email" placeholder="E-posta" required>
+        <input type="password" name="password" placeholder="Şifre" required>
+        <input type="submit" value="Kayıt Ol">
+    </form>
+    <div class="login-link">
+        Zaten hesabın var mı? <a href="/login">Giriş Yap</a>
+    </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,96 @@
+<!-- home.html -->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Dosya Paylşama</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+        }
+
+        /* Navbar stili */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #007BFF;
+            padding: 10px 20px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1000;
+        }
+
+        .navbar .logo {
+            color: white;
+            font-size: 24px;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .navbar .menu {
+            display: flex;
+            gap: 20px;
+        }
+
+        .navbar .menu a {
+            color: white;
+            font-size: 16px;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+
+        .navbar .menu a:hover {
+            background-color: #0056b3;
+        }
+
+        /* Ana içerik kısmı eski tasarıma göre ortalanmış */
+        .content {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            text-align: center;
+        }
+
+        .button-container {
+            margin-top: 60px; /* navbar'a çarpmaması için */
+        }
+
+        .button {
+            display: block;
+            margin: 20px;
+            padding: 20px;
+            font-size: 24px;
+            color: white;
+            background-color: #007BFF;
+            border: none;
+            border-radius: 8px;
+            text-decoration: none;
+            width: 300px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+<div class="navbar">
+    <a href="/" class="logo">Dosya Yönetimi</a>
+    <div class="menu">
+        <a href="/login">Giriş Yap</a>
+        <a href="/register">Kayıt Ol</a>
+    </div>
+</div>
+
+<h1>Dosya Paylşama</h1>
+</body>
+</html>
