@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Dosya Paylaş</title>
+    <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}" />
+</head>
+<body class="container mt-5">
+
+<h2 th:text="'Paylaşılan Dosya: ' + ${fileName}"></h2>
+
+<div class="mt-3">
+    <label>Paylaşılabilir Bağlantı:</label>
+    <input type="text" th:value="${sharedFileUrl}" class="form-control" readonly>
+    <a th:href="${sharedFileUrl}" class="btn btn-primary mt-3">İndir</a>
+</div>
+
+</body>
+</html>
