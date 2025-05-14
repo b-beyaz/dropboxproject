@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  mysql-db:
+    image: mysql:8.0
+    container_name: mysql-db
+    environment:
+      MYSQL_USER: root
+      MYSQL_ROOT_PASSWORD: 123456
+      MYSQL_DATABASE: dropboxproject
+    volumes:
+      - mysql_data:/var/lib/mysql
+    ports:
+      - "3307:3306"
+    networks:
+      - dropbox-network
+
+  dropbox-app:
+    build: .
+    container_name: dropbox-app
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mysql-db
+    networks:
+      - dropbox-network
+volumes:
+  mysql_data:  # Önceden oluşturulan volume
+
+networks:
+  dropbox-network:
+    driver: bridge

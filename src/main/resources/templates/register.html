@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="tr" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -72,12 +72,14 @@
 
 <div class="register-container">
     <h2>Kayıt Ol</h2>
-    <form method="POST" action="/register">
+    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+    <form action="/perform_register" method="post">
         <input type="text" name="username" placeholder="Kullanıcı Adı" required>
-        <input type="email" name="email" placeholder="E-posta" required>
         <input type="password" name="password" placeholder="Şifre" required>
-        <input type="submit" value="Kayıt Ol">
+        <button type="submit">Kayıt Ol</button>
     </form>
+
     <div class="login-link">
         Zaten hesabın var mı? <a href="/login">Giriş Yap</a>
     </div>
