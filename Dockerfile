@@ -1,10 +1,15 @@
-FROM tomcat:10.1.40-jdk21
+FROM maven:3.9.6-eclipse-temurin-21 AS build
+WORKDIR /app
+COPY . .
+RUN mvn clean package -DskipTests
 
+FROM eclipse-temurin:21-jre-jammy
+WORKDIR /app
+COPY --from=build /app/target/dropboxproject-0.0.1-SNAPSHOT.war app.war
 
-COPY target/dropboxproject.war /usr/local/tomcat/webapps/ROOT.war
+# Uploads dizinini oluştur ve izinleri ayarla
+RUN mkdir -p /app/uploads && \
+    chmod 777 /app/uploads
 
-# Tomcat portunu aç
 EXPOSE 8080
-
-# Tomcat'i başlat
-CMD ["catalina.sh", "run"]
+ENTRYPOINT ["java", "-jar", "app.war"]
