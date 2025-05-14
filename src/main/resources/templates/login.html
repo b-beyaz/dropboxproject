@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="tr" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -71,11 +71,18 @@
 
 <div class="login-container">
     <h2>Giriş Yap</h2>
-    <form method="POST" action="/login">
+    <div th:if="${param.error}" class="alert alert-danger">
+        Geçersiz kullanıcı adı veya şifre.
+    </div>
+    <div th:if="${param.logout}" class="alert alert-success">
+        Başarıyla çıkış yaptınız.
+    </div>
+    <form action="/perform_login" method="post">
         <input type="text" name="username" placeholder="Kullanıcı Adı" required>
         <input type="password" name="password" placeholder="Şifre" required>
-        <input type="submit" value="Giriş Yap">
+        <button type="submit">Giriş Yap</button>
     </form>
+
     <div class="register-link">
         Hesabın yok mu? <a href="/register">Kayıt Ol</a>
     </div>

@@ -19,6 +19,12 @@ public class FileModel {
     private String fileType;
     private Long size;
 
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private UserModel user;
+    //birden fazla dosyanın tek kullanıcısı olabilir
+
+
 
     @Lob
     private byte[] data;

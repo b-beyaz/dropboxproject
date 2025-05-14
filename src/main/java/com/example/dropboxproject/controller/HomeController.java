@@ -12,7 +12,7 @@ public class HomeController {
         model.addAttribute("name", "Ayşe");
         return "home"; // home.html dosyasına yönlendirir
     }
-
+/*
     @GetMapping("/login")
     public String login(Model model) {
         return "login"; // home.html dosyasına yönlendirir
@@ -21,5 +21,5 @@ public class HomeController {
     @GetMapping("/register")
     public String register(Model model) {
         return "register"; // home.html dosyasına yönlendirir
-    }
+    }*/
 }
