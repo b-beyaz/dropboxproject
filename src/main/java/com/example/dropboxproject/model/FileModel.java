@@ -27,6 +27,7 @@ public class FileModel {
 
 
     @Lob
+    @Column(columnDefinition = "LONGBLOB")
     private byte[] data;
 
     public Long getId() {

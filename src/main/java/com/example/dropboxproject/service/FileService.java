@@ -11,10 +11,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -22,6 +24,8 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class FileService {
@@ -29,8 +33,12 @@ public class FileService {
 
     private final FileRepository fileRepository;
     private final UserRepository userRepository;
-    private final Path rootLocation = Paths.get("uploads");
     private final JavaMailSender mailSender;
+    
+    @Value("${app.upload.dir:/app/uploads}")
+    private String uploadDir;
+    
+    private Path rootLocation;
 
     public FileService(FileRepository fileRepository, UserRepository userRepository, JavaMailSender mailSender) {
         this.fileRepository = fileRepository;
@@ -41,30 +49,53 @@ public class FileService {
     @PostConstruct
     public void init() {
         try {
+            rootLocation = Paths.get(uploadDir);
             Files.createDirectories(rootLocation);
+            logger.info("Dosya yükleme dizini oluşturuldu: {}", rootLocation.toAbsolutePath());
         } catch (IOException e) {
+            logger.error("Dosya yükleme dizini oluşturulamadı: {}", e.getMessage());
             throw new RuntimeException("Could not initialize storage location", e);
         }
     }
 
+    @Transactional
     public FileModel saveFile(MultipartFile file, String username) throws IOException {
-        UserModel user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        try {
+            UserModel user = userRepository.findByUsername(username)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // Veritabanına kaydet
-        FileModel fileModel = new FileModel();
-        fileModel.setFileName(file.getOriginalFilename());
-        fileModel.setFileType(file.getContentType());
-        fileModel.setSize(file.getSize());
-        fileModel.setData(file.getBytes());
-        fileModel.setUser(user); // Kullanıcıyı dosyaya bağla
-        fileRepository.save(fileModel);
+            // Dosya adını benzersiz yap
+            String originalFilename = file.getOriginalFilename();
+            String uniqueFilename = System.currentTimeMillis() + "_" + originalFilename;
 
-        // uploads klasörüne fiziksel dosyayı yaz
-        Path destinationFile = rootLocation.resolve(Paths.get(file.getOriginalFilename())).normalize().toAbsolutePath();
-        Files.copy(file.getInputStream(), destinationFile, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            // Veritabanına kaydet
+            FileModel fileModel = new FileModel();
+            fileModel.setFileName(uniqueFilename);
+            fileModel.setFileType(file.getContentType());
+            fileModel.setSize(file.getSize());
+            fileModel.setData(file.getBytes());
+            fileModel.setUser(user);
+            
+            FileModel savedFile = fileRepository.save(fileModel);
+            logger.info("Dosya veritabanına kaydedildi: {}", uniqueFilename);
 
-        return fileModel;
+            // Fiziksel dosyayı kaydet
+            Path destinationFile = rootLocation.resolve(Paths.get(uniqueFilename)).normalize().toAbsolutePath();
+            
+            if (!destinationFile.getParent().equals(rootLocation.toAbsolutePath())) {
+                throw new RuntimeException("Cannot store file outside current directory.");
+            }
+            
+            try (InputStream inputStream = file.getInputStream()) {
+                Files.copy(inputStream, destinationFile, StandardCopyOption.REPLACE_EXISTING);
+                logger.info("Dosya fiziksel olarak kaydedildi: {}", destinationFile);
+            }
+
+            return savedFile;
+        } catch (IOException e) {
+            logger.error("Dosya kaydedilirken hata oluştu: {}", e.getMessage());
+            throw new IOException("Failed to store file", e);
+        }
     }
 
     public List<FileModel> listUploadedFiles(String username) {
