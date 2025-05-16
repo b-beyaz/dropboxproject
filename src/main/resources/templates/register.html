@@ -1,22 +1,111 @@
 <!DOCTYPE html>
-<html lang="tr" xmlns:th="http://www.thymeleaf.org">
+<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kayıt Ol</title>
+    <title th:text="#{register.title}">Register</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
+        :root {
+            --bg-primary: #f4f4f4;
+            --bg-secondary: #ffffff;
+            --text-primary: #333333;
+            --text-secondary: #666666;
+            --border-color: #cccccc;
+            --btn-primary-bg: #007BFF;
+            --btn-primary-hover: #0056b3;
+            --btn-success-bg: #28a745;
+            --btn-success-hover: #218838;
+            --alert-error-bg: #ffe6e6;
+            --alert-error-border: #dc3545;
+            --alert-success-bg: #e8f5e9;
+            --alert-success-border: #28a745;
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #2d2d2d;
+            --text-primary: #ffffff;
+            --text-secondary: #cccccc;
+            --border-color: #404040;
+            --btn-primary-bg: #0d6efd;
+            --btn-primary-hover: #0b5ed7;
+            --btn-success-bg: #198754;
+            --btn-success-hover: #157347;
+            --alert-error-bg: #350c0f;
+            --alert-error-border: #842029;
+            --alert-success-bg: #051b11;
+            --alert-success-border: #0f5132;
+        }
+
         body {
             font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .navbar {
+            background-color: var(--btn-primary-bg);
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .navbar a {
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+        }
+
+        .navbar a:hover {
+            background-color: var(--btn-primary-hover);
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .menu {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .language-selector select {
+            padding: 0.5rem;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+
+        .theme-toggle {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            padding: 0.5rem 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .content {
+            flex: 1;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            margin: 0;
+            padding: 2rem;
         }
 
         .register-container {
-            background-color: white;
+            background-color: var(--bg-secondary);
             padding: 40px;
             border-radius: 10px;
             box-shadow: 0 0 15px rgba(0,0,0,0.1);
@@ -26,6 +115,7 @@
         .register-container h2 {
             text-align: center;
             margin-bottom: 30px;
+            color: var(--text-primary);
         }
 
         .register-container input[type="text"],
@@ -34,14 +124,16 @@
             width: 100%;
             padding: 12px;
             margin-bottom: 20px;
-            border: 1px solid #ccc;
+            border: 1px solid var(--border-color);
             border-radius: 6px;
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
         }
 
-        .register-container input[type="submit"] {
+        .register-container button[type="submit"] {
             width: 100%;
             padding: 12px;
-            background-color: #28a745;
+            background-color: var(--btn-success-bg);
             border: none;
             color: white;
             font-size: 16px;
@@ -49,41 +141,131 @@
             cursor: pointer;
         }
 
-        .register-container input[type="submit"]:hover {
-            background-color: #218838;
+        .register-container button[type="submit"]:hover {
+            background-color: var(--btn-success-hover);
         }
 
         .register-container .login-link {
             text-align: center;
             margin-top: 15px;
+            color: var(--text-secondary);
         }
 
         .register-container .login-link a {
-            color: #007BFF;
+            color: var(--btn-primary-bg);
             text-decoration: none;
         }
 
         .register-container .login-link a:hover {
             text-decoration: underline;
         }
+
+        .alert {
+            padding: 12px;
+            margin-bottom: 20px;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .alert-danger {
+            background-color: var(--alert-error-bg);
+            color: var(--alert-error-border);
+            border: 1px solid var(--alert-error-border);
+        }
+
+        .alert-success {
+            background-color: var(--alert-success-bg);
+            color: var(--alert-success-border);
+            border: 1px solid var(--alert-success-border);
+        }
     </style>
 </head>
 <body>
 
-<div class="register-container">
-    <h2>Kayıt Ol</h2>
-    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
-    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
-    <form action="/perform_register" method="post">
-        <input type="text" name="username" placeholder="Kullanıcı Adı" required>
-        <input type="password" name="password" placeholder="Şifre" required>
-        <button type="submit">Kayıt Ol</button>
-    </form>
-
-    <div class="login-link">
-        Zaten hesabın var mı? <a href="/login">Giriş Yap</a>
+<!-- Navbar -->
+<div class="navbar">
+    <a href="/" class="logo" th:text="#{app.title}">File Management</a>
+    <div class="menu">
+        <div class="language-selector">
+            <select onchange="changeLanguage(this.value)">
+                <option value="tr" th:selected="${#locale.toString() == 'tr'}" th:text="#{language.tr}">Türkçe</option>
+                <option value="en" th:selected="${#locale.toString() == 'en'}" th:text="#{language.en}">English</option>
+            </select>
+        </div>
+        <button class="theme-toggle" onclick="toggleTheme()">
+            <i class="fas fa-sun" id="theme-icon"></i>
+            <span id="theme-text" th:text="#{app.theme.light}">Dark Mode</span>
+        </button>
     </div>
 </div>
+
+<div class="content">
+    <div class="register-container">
+        <h2 th:text="#{register.title}">Register</h2>
+        <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
+        <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+        <form th:action="@{/perform_register}" method="post">
+            <input type="text" name="username" th:placeholder="#{register.username}" required>
+            <input type="password" name="password" th:placeholder="#{register.password}" required>
+            <button type="submit" th:text="#{register.button}">Register</button>
+        </form>
+
+        <div class="login-link">
+            <span th:text="#{register.login.prompt}">Already have an account?</span>
+            <a href="/login" th:text="#{nav.login}">Login</a>
+        </div>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    // Language change function
+    function changeLanguage(lang) {
+        const url = new URL(window.location.href);
+        url.searchParams.set('lang', lang);
+        window.location.href = url.toString();
+    }
+
+    // Theme functions
+    function setTheme(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('theme', theme);
+        
+        const themeIcon = document.getElementById('theme-icon');
+        const themeText = document.getElementById('theme-text');
+        
+        if (theme === 'dark') {
+            themeIcon.className = 'fas fa-moon';
+            themeText.textContent = /*[[#{app.theme.dark}]]*/ 'Light Mode';
+        } else {
+            themeIcon.className = 'fas fa-sun';
+            themeText.textContent = /*[[#{app.theme.light}]]*/ 'Dark Mode';
+        }
+    }
+
+    function toggleTheme() {
+        const currentTheme = localStorage.getItem('theme') || 'light';
+        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+        setTheme(newTheme);
+    }
+
+    // Initialize theme
+    document.addEventListener('DOMContentLoaded', () => {
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        setTheme(savedTheme);
+        
+        // Alert auto-hide
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach(function(alert) {
+            setTimeout(function() {
+                alert.style.transition = 'opacity 0.5s';
+                alert.style.opacity = '0';
+                setTimeout(function() {
+                    alert.style.display = 'none';
+                }, 500);
+            }, 3000);
+        });
+    });
+</script>
 
 </body>
 </html>

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Klasörler</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <h2>Klasörlerim</h2>
+        
+        <!-- Yeni Klasör Oluşturma Formu -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Yeni Klasör Oluştur</h5>
+                <form th:action="@{/folders/create}" method="post" class="form-inline">
+                    <input type="text" name="name" class="form-control mr-2" placeholder="Klasör Adı" required>
+                    <input type="hidden" name="parentId" th:value="${currentFolder != null ? currentFolder.id : ''}" />
+                    <button type="submit" class="btn btn-primary">Oluştur</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Mevcut Konum Bilgisi -->
+        <nav aria-label="breadcrumb" th:if="${currentFolder != null}">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a th:href="@{/folders}">Ana Klasör</a></li>
+                <li class="breadcrumb-item active" th:text="${currentFolder.name}"></li>
+            </ol>
+        </nav>
+
+        <!-- Alt Klasörler -->
+        <div class="row">
+            <div class="col-md-12">
+                <h4>Klasörler</h4>
+                <div class="list-group">
+                    <a th:each="folder : ${subFolders}" 
+                       th:href="@{/folders/{id}(id=${folder.id})}"
+                       class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <span>
+                            <i class="fas fa-folder mr-2"></i>
+                            <span th:text="${folder.name}"></span>
+                        </span>
+                        <form th:action="@{/folders/{id}/delete(id=${folder.id})}" method="post" class="d-inline">
+                            <button type="submit" class="btn btn-danger btn-sm" 
+                                    onclick="return confirm('Bu klasörü silmek istediğinizden emin misiniz?')">
+                                Sil
+                            </button>
+                        </form>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dosyalar -->
+        <div class="row mt-4">
+            <div class="col-md-12">
+                <h4>Dosyalar</h4>
+                <div class="list-group">
+                    <div th:each="file : ${files}" class="list-group-item d-flex justify-content-between align-items-center">
+                        <span>
+                            <i class="fas fa-file mr-2"></i>
+                            <span th:text="${file.originalFilename}"></span>
+                        </span>
+                        <div>
+                            <a th:href="@{/uploads/{id}(id=${file.id})}" class="btn btn-info btn-sm">İndir</a>
+                            <form th:action="@{/delete/{id}(id=${file.id})}" method="post" class="d-inline">
+                                <button type="submit" class="btn btn-danger btn-sm"
+                                        onclick="return confirm('Bu dosyayı silmek istediğinizden emin misiniz?')">
+                                    Sil
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dosya Yükleme Formu -->
+        <div class="card mt-4">
+            <div class="card-body">
+                <h5 class="card-title">Dosya Yükle</h5>
+                <form th:action="@{/upload}" method="post" enctype="multipart/form-data" class="form-inline">
+                    <input type="file" name="file" class="form-control mr-2" required>
+                    <input type="hidden" name="folderId" th:value="${currentFolder != null ? currentFolder.id : ''}" />
+                    <button type="submit" class="btn btn-success">Yükle</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="https://kit.fontawesome.com/your-font-awesome-kit.js"></script>
+</body>
+</html> 

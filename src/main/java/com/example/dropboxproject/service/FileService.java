@@ -1,6 +1,7 @@
 package com.example.dropboxproject.service;
 
 import com.example.dropboxproject.model.FileModel;
+import com.example.dropboxproject.model.FolderModel;
 import com.example.dropboxproject.model.UserModel;
 import com.example.dropboxproject.repository.FileRepository;
 import com.example.dropboxproject.repository.UserRepository;
@@ -26,6 +27,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import java.util.UUID;
 
 @Service
 public class FileService {
@@ -35,7 +40,7 @@ public class FileService {
     private final UserRepository userRepository;
     private final JavaMailSender mailSender;
     
-    @Value("${app.upload.dir:/app/uploads}")
+    @Value("${app.upload.dir:./uploads}")
     private String uploadDir;
     
     private Path rootLocation;
@@ -49,9 +54,19 @@ public class FileService {
     @PostConstruct
     public void init() {
         try {
-            rootLocation = Paths.get(uploadDir);
-            Files.createDirectories(rootLocation);
-            logger.info("Dosya yükleme dizini oluşturuldu: {}", rootLocation.toAbsolutePath());
+            rootLocation = Paths.get(uploadDir).toAbsolutePath().normalize();
+            if (!Files.exists(rootLocation)) {
+                Files.createDirectories(rootLocation);
+                logger.info("Dosya yükleme dizini oluşturuldu: {}", rootLocation.toString());
+            } else {
+                logger.info("Dosya yükleme dizini mevcut: {}", rootLocation.toString());
+            }
+            
+            // Dizine yazma iznini kontrol et
+            if (!Files.isWritable(rootLocation)) {
+                logger.error("Dosya yükleme dizinine yazma izni yok: {}", rootLocation.toString());
+                throw new RuntimeException("Upload directory is not writable");
+            }
         } catch (IOException e) {
             logger.error("Dosya yükleme dizini oluşturulamadı: {}", e.getMessage());
             throw new RuntimeException("Could not initialize storage location", e);
@@ -59,50 +74,36 @@ public class FileService {
     }
 
     @Transactional
-    public FileModel saveFile(MultipartFile file, String username) throws IOException {
-        try {
-            UserModel user = userRepository.findByUsername(username)
-                    .orElseThrow(() -> new RuntimeException("User not found"));
-
-            // Dosya adını benzersiz yap
-            String originalFilename = file.getOriginalFilename();
-            String uniqueFilename = System.currentTimeMillis() + "_" + originalFilename;
-
-            // Veritabanına kaydet
-            FileModel fileModel = new FileModel();
-            fileModel.setFileName(uniqueFilename);
-            fileModel.setFileType(file.getContentType());
-            fileModel.setSize(file.getSize());
-            fileModel.setData(file.getBytes());
-            fileModel.setUser(user);
-            
-            FileModel savedFile = fileRepository.save(fileModel);
-            logger.info("Dosya veritabanına kaydedildi: {}", uniqueFilename);
-
-            // Fiziksel dosyayı kaydet
-            Path destinationFile = rootLocation.resolve(Paths.get(uniqueFilename)).normalize().toAbsolutePath();
-            
-            if (!destinationFile.getParent().equals(rootLocation.toAbsolutePath())) {
-                throw new RuntimeException("Cannot store file outside current directory.");
-            }
-            
-            try (InputStream inputStream = file.getInputStream()) {
-                Files.copy(inputStream, destinationFile, StandardCopyOption.REPLACE_EXISTING);
-                logger.info("Dosya fiziksel olarak kaydedildi: {}", destinationFile);
-            }
-
-            return savedFile;
-        } catch (IOException e) {
-            logger.error("Dosya kaydedilirken hata oluştu: {}", e.getMessage());
-            throw new IOException("Failed to store file", e);
+    public FileModel saveFile(MultipartFile file, UserModel user, FolderModel folder) throws IOException {
+        String fileName = UUID.randomUUID().toString();
+        Path uploadPath = Paths.get(uploadDir);
+        
+        if (!Files.exists(uploadPath)) {
+            Files.createDirectories(uploadPath);
         }
+
+        Files.copy(file.getInputStream(), uploadPath.resolve(fileName));
+
+        FileModel fileModel = new FileModel();
+        fileModel.setFileName(fileName);
+        fileModel.setOriginalFilename(file.getOriginalFilename());
+        fileModel.setFileType(file.getContentType());
+        fileModel.setSize(file.getSize());
+        fileModel.setUser(user);
+        fileModel.setFolder(folder);
+
+        return fileRepository.save(fileModel);
     }
 
-    public List<FileModel> listUploadedFiles(String username) {
+    public Page<FileModel> listUploadedFiles(String username, int page, int size) {
         UserModel user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         
-        return fileRepository.findByUser(user);
+        return fileRepository.findByUserAndFolderIsNull(user, PageRequest.of(page, size, Sort.by("uploadDate").descending()));
+    }
+
+    public List<FileModel> getFilesInFolder(FolderModel folder) {
+        return fileRepository.findByFolder(folder);
     }
 
     public Resource loadFileAsResource(String filename, String username) throws Exception {
@@ -119,6 +120,23 @@ public class FileService {
             return resource;
         } else {
             throw new RuntimeException("Could not read file: " + filename);
+        }
+    }
+
+    public Resource loadFileAsResourceById(Long id, String username) throws Exception {
+        UserModel user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        FileModel fileModel = fileRepository.findByIdAndUser(id, user)
+                .orElseThrow(() -> new RuntimeException("File not found or access denied"));
+
+        Path file = rootLocation.resolve(fileModel.getFileName());
+        Resource resource = new UrlResource(file.toUri());
+
+        if (resource.exists() || resource.isReadable()) {
+            return resource;
+        } else {
+            throw new RuntimeException("Could not read file: " + fileModel.getFileName());
         }
     }
 
@@ -176,6 +194,37 @@ public class FileService {
         
         fileRepository.save(sharedFile);
         logger.info("Dosya {} kullanıcı {} ile paylaşıldı", file.getFileName(), targetUser.getUsername());
+    }
+
+    public FileModel getFile(Long id) {
+        return fileRepository.findById(id).orElse(null);
+    }
+
+    public void deleteFile(Long id) throws IOException {
+        FileModel file = getFile(id);
+        if (file != null) {
+            Path filePath = rootLocation.resolve(file.getFileName());
+            Files.deleteIfExists(filePath);
+            fileRepository.delete(file);
+        }
+    }
+
+    public byte[] downloadFile(String fileName) throws IOException {
+        Path filePath = rootLocation.resolve(fileName);
+        return Files.readAllBytes(filePath);
+    }
+
+    public FileModel getFileById(Long id, String username) {
+        UserModel user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+                
+        return fileRepository.findByIdAndUser(id, user)
+                .orElseThrow(() -> new RuntimeException("File not found or access denied"));
+    }
+
+    public String readFileContent(FileModel file) throws IOException {
+        Path filePath = rootLocation.resolve(file.getFileName());
+        return new String(Files.readAllBytes(filePath));
     }
 }
 

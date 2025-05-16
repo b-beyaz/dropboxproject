@@ -18,6 +18,7 @@ public class UserController {
         UserModel savedUser = userService.saveUser(user);  // UserService'den çağırılıyor
         return ResponseEntity.ok(savedUser);
     }
+
     @PostMapping("/register")
     public String registerUser(@ModelAttribute UserModel user) {
         userService.saveUser(user);  // Kullanıcıyı kaydet

@@ -2,7 +2,6 @@ services:
   mysql-db:
     image: mysql:8.0
     container_name: mysql-container
-    command: --default-authentication-plugin=mysql_native_password
     environment:
       MYSQL_ROOT_PASSWORD: rootpassword
       MYSQL_DATABASE: dropboxproject
@@ -25,19 +24,13 @@ services:
       - "8090:8080"
     volumes:
       - app_data:/app/uploads
+      - mysql_data:/var/lib/mysql
     environment:
       # MySQL Bağlantı Bilgileri
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/dropboxproject?allowPublicKeyRetrieval=true&useSSL=false
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/dropboxproject?useSSL=false&allowPublicKeyRetrieval=true
       SPRING_DATASOURCE_USERNAME: dbuser
       SPRING_DATASOURCE_PASSWORD: dbpassword
-      
-      # JPA/Hibernate Ayarları
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update
-      SPRING_JPA_SHOW_SQL: "true"
-      
-      # Dosya yükleme ayarları
-      SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE: 20MB
-      SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE: 20MB
+      # Dosya yükleme yolu
       APP_UPLOAD_DIR: /app/uploads
 
       # Email Bilgileri
@@ -52,8 +45,13 @@ services:
       mysql-db:
         condition: service_healthy
 
+  tomcat:
+    image: tomcat:9.0
+    ports:
+      - "8081:8080"
+    volumes:
+      - ./target/dropboxproject-0.0.1-SNAPSHOT.war:/usr/local/tomcat/webapps/dropboxproject-0.0.1-SNAPSHOT.war
 volumes:
   mysql_data:
-    driver: local
   app_data:
     driver: local

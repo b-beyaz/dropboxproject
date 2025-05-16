@@ -1,189 +1,130 @@
 <!DOCTYPE html>
-<html lang="tr" xmlns:th="http://www.thymeleaf.org"
+<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dosya Yükle</title>
-    <style>
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-        }
-
-        .navbar {
-            background-color: #007BFF;
-            padding: 1rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .navbar a {
-            color: white;
-            text-decoration: none;
-            padding: 0.5rem 1rem;
-        }
-
-        .navbar a:hover {
-            background-color: #0056b3;
-        }
-
-        .logo {
-            font-size: 1.5rem;
-            font-weight: bold;
-        }
-
-        .menu {
-            display: flex;
-            gap: 1rem;
-            align-items: center;
-        }
-
-        .content {
-            padding: 2rem;
-            text-align: center;
-            margin-top: 2rem;
-        }
-
-        .upload-container {
-            max-width: 500px;
-            margin: 0 auto;
-            padding: 2rem;
-            background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        h2 {
-            color: #333;
-            margin-bottom: 2rem;
-        }
-
-        .file-input-container {
-            margin-bottom: 1.5rem;
-        }
-
-        .file-input {
-            display: none;
-        }
-
-        .file-input-label {
-            display: inline-block;
-            padding: 10px 20px;
-            background-color: #007BFF;
-            color: white;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-
-        .file-input-label:hover {
-            background-color: #0056b3;
-        }
-
-        .upload-button {
-            display: inline-block;
-            padding: 10px 30px;
-            background-color: #007BFF;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-            transition: background-color 0.3s;
-        }
-
-        .upload-button:hover {
-            background-color: #0056b3;
-        }
-
-        .message {
-            margin-top: 1rem;
-            padding: 1rem;
-            border-radius: 4px;
-        }
-
-        .success-message {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-
-        .error-message {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-
-        .logout-form {
-            margin: 0;
-            padding: 0;
-        }
-
-        .logout-button {
-            background: none;
-            border: none;
-            color: white;
-            padding: 0.5rem 1rem;
-            cursor: pointer;
-            font-size: 1rem;
-        }
-
-        .logout-button:hover {
-            background-color: #0056b3;
-        }
-
-        .selected-file-name {
-            margin-top: 0.5rem;
-            color: #666;
-            font-size: 0.9rem;
-        }
-    </style>
+    <title th:text="#{upload.title}">Dosya Yükle</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 </head>
 <body>
 
-<!-- Navbar -->
 <div class="navbar">
-    <a href="/" class="logo">Dosya Yönetimi</a>
+    <a href="/" class="logo" th:text="#{app.title}">Dosya Yönetimi</a>
     <div class="menu">
-        <div sec:authorize="!isAuthenticated()">
-            <a href="/login">Giriş Yap</a>
-            <a href="/register">Kayıt Ol</a>
+        <div class="language-selector">
+            <select onchange="changeLanguage(this.value)">
+                <option value="tr" th:selected="${#locale.toString() == 'tr'}" th:text="#{language.tr}">Türkçe</option>
+                <option value="en" th:selected="${#locale.toString() == 'en'}" th:text="#{language.en}">English</option>
+            </select>
         </div>
-        <div sec:authorize="isAuthenticated()">
+        <button class="theme-toggle" onclick="toggleTheme()">
+            <i class="fas fa-sun" id="theme-icon"></i>
+            <span id="theme-text" th:text="#{app.theme.light}">Tema Değiştir</span>
+        </button>
+        <div sec:authorize="!isAuthenticated()">
+            <a href="/login" th:text="#{nav.login}">Giriş Yap</a>
+            <a href="/register" th:text="#{nav.register}">Kayıt Ol</a>
+        </div>
+        <div sec:authorize="isAuthenticated()" class="auth-buttons">
+            <a href="/list" th:text="#{nav.files}">Dosyalarım</a>
             <form th:action="@{/logout}" method="post" class="logout-form">
-                <button type="submit" class="logout-button">Çıkış Yap</button>
+                <button type="submit" class="logout-button" th:text="#{nav.logout}">Çıkış Yap</button>
             </form>
         </div>
     </div>
 </div>
 
-<!-- İçerik -->
 <div class="content">
-    <div class="upload-container">
+    <div th:if="${message}" class="alert" th:classappend="${message.contains('başarı') ? 'alert-info' : 'alert-danger'}"
+         th:text="${message}"></div>
+
+    <div class="container mt-5">
         <h2>Dosya Yükle</h2>
-        <form method="POST" action="/upload" enctype="multipart/form-data">
-            <div class="file-input-container">
-                <input type="file" name="file" id="file" class="file-input" required />
-                <label for="file" class="file-input-label">Dosya Seç</label>
-                <div class="selected-file-name" id="fileName"></div>
-            </div>
-            <button type="submit" class="upload-button">Yükle</button>
-        </form>
         
-        <div th:if="${message}" class="message" th:classappend="${message.contains('başarı')} ? 'success-message' : 'error-message'" th:text="${message}"></div>
+        <div class="card">
+            <div class="card-body">
+                <form th:action="@{/upload}" method="post" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <label for="file">Dosya Seç</label>
+                        <input type="file" class="form-control-file" id="file" name="file" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="folderId">Klasör Seç</label>
+                        <select class="form-control" id="folderId" name="folderId">
+                            <option value="">Ana Klasör</option>
+                            <option th:each="folder : ${folders}"
+                                    th:value="${folder.id}"
+                                    th:text="${folder.name}">
+                            </option>
+                        </select>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">Yükle</button>
+                    <a href="/folders" class="btn btn-secondary">Klasörlere Dön</a>
+                </form>
+            </div>
+        </div>
     </div>
 </div>
 
-<script>
-    // Seçilen dosya adını göster
-    document.getElementById('file').addEventListener('change', function() {
-        const fileName = this.files[0] ? this.files[0].name : 'Dosya seçilmedi';
-        document.getElementById('fileName').textContent = fileName;
+<script th:inline="javascript">
+    // Dil değiştirme fonksiyonu
+    function changeLanguage(lang) {
+        const url = new URL(window.location.href);
+        url.searchParams.set('lang', lang);
+        window.location.href = url.toString();
+    }
+
+    // Tema tercihi için localStorage kullan
+    function setTheme(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('theme', theme);
+        
+        // Icon ve metin güncelleme
+        const themeIcon = document.getElementById('theme-icon');
+        const themeText = document.getElementById('theme-text');
+        
+        if (theme === 'dark') {
+            themeIcon.className = 'fas fa-moon';
+            themeText.textContent = /*[[#{app.theme.dark}]]*/ 'Açık Mod';
+        } else {
+            themeIcon.className = 'fas fa-sun';
+            themeText.textContent = /*[[#{app.theme.light}]]*/ 'Koyu Mod';
+        }
+    }
+
+    function toggleTheme() {
+        const currentTheme = localStorage.getItem('theme') || 'light';
+        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+        setTheme(newTheme);
+    }
+
+    // Sayfa yüklendiğinde tema tercihini kontrol et
+    document.addEventListener('DOMContentLoaded', () => {
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        setTheme(savedTheme);
+
+        // Dosya seçildiğinde dosya adını göster
+        const fileInput = document.getElementById('file');
+        const fileName = document.getElementById('file-name');
+        
+        fileInput.addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                fileName.textContent = this.files[0].name;
+            } else {
+                fileName.textContent = '';
+            }
+        });
     });
 </script>
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 
 </body>
 </html>

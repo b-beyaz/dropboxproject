@@ -31,9 +31,16 @@ public class AuthController {
     @PostMapping("/perform_register")
     public String processRegister(@ModelAttribute UserModel userModel, Model model) {
         try {
+            // Şifre uzunluğu kontrolü
+            String password = userModel.getPassword();
+            if (password.length() < 6 || password.length() > 12) {
+                model.addAttribute("errorMessage", "Şifre 6 ile 12 karakter arasında olmalıdır!");
+                return "register";
+            }
+
             // Kullanıcı adı kontrolü
             if (userRepository.findByUsername(userModel.getUsername()).isPresent()) {
-                model.addAttribute("error", "Bu kullanıcı adı zaten kullanılıyor!");
+                model.addAttribute("errorMessage", "Bu kullanıcı adı zaten kullanılıyor!");
                 return "register";
             }
 
@@ -42,24 +49,29 @@ public class AuthController {
             userRepository.save(userModel);
             
             logger.info("Yeni kullanıcı kaydedildi: {}", userModel.getUsername());
-            model.addAttribute("success", "Kayıt başarılı! Şimdi giriş yapabilirsiniz.");
+            model.addAttribute("successMessage", "Kayıt başarılı! Şimdi giriş yapabilirsiniz.");
             return "redirect:/login";
         } catch (Exception e) {
             logger.error("Kayıt işlemi sırasında hata: {}", e.getMessage());
-            model.addAttribute("error", "Kayıt sırasında bir hata oluştu!");
+            model.addAttribute("errorMessage", "Kayıt sırasında bir hata oluştu: " + e.getMessage());
             return "register";
         }
     }
 
     // Login sayfasını gösterir
     @GetMapping("/login")
-    public String showLoginForm() {
-        return "login"; // resources/templates/login.html
+    public String showLoginForm(Model model, @RequestParam(required = false) String error) {
+        if (error != null) {
+            model.addAttribute("errorMessage", "Geçersiz kullanıcı adı veya şifre!");
+        }
+        return "login";
     }
 
-    // (İsteğe bağlı) Ana sayfa
-    @GetMapping("/")
-    public String home() {
-        return "index"; // resources/templates/home.html
+    // Genel hata yakalama
+    @ExceptionHandler(Exception.class)
+    public String handleError(Exception e, Model model) {
+        logger.error("Beklenmeyen bir hata oluştu: {}", e.getMessage());
+        model.addAttribute("errorMessage", "Bir hata oluştu: " + e.getMessage());
+        return "error";
     }
 }

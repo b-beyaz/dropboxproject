@@ -1,380 +1,162 @@
 <!DOCTYPE html>
-<html lang="tr" xmlns:th="http://www.thymeleaf.org"
+<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Yüklenen Dosyalar</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css">
-    <style>
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-        }
-
-        .navbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background-color: #007BFF;
-            padding: 10px 20px;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            z-index: 1000;
-        }
-
-        .navbar .logo {
-            color: white;
-            font-size: 24px;
-            text-decoration: none;
-            font-weight: bold;
-        }
-
-        .navbar .menu {
-            display: flex;
-            gap: 20px;
-        }
-
-        .navbar .menu a {
-            color: white;
-            font-size: 16px;
-            text-decoration: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            transition: background-color 0.3s;
-        }
-
-        .navbar .menu a:hover {
-            background-color: #0056b3;
-        }
-
-        .content {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            text-align: center;
-        }
-
-        .button-container {
-            margin-top: 60px;
-        }
-
-        .button {
-            display: block;
-            margin: 20px;
-            padding: 20px;
-            font-size: 24px;
-            color: white;
-            background-color: #007BFF;
-            border: none;
-            border-radius: 8px;
-            text-decoration: none;
-            width: 300px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-
-        .button:hover {
-            background-color: #0056b3;
-        }
-
-        .logout-form {
-            margin: 0;
-            padding: 0;
-        }
-
-        .logout-button {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 16px;
-            text-decoration: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            transition: background-color 0.3s;
-            cursor: pointer;
-        }
-
-        .logout-button:hover {
-            background-color: #0056b3;
-        }
-
-        .files-container {
-            background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            padding: 2rem;
-            margin: 0 auto;
-            max-width: 1200px;
-        }
-
-        h2 {
-            color: #333;
-            margin-bottom: 2rem;
-            text-align: center;
-        }
-
-        .table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 1rem;
-            background-color: white;
-        }
-
-        .table th,
-        .table td {
-            padding: 1rem;
-            text-align: left;
-            border-bottom: 1px solid #dee2e6;
-        }
-
-        .table th {
-            background-color: #f8f9fa;
-            font-weight: 600;
-        }
-
-        .table tr:hover {
-            background-color: #f8f9fa;
-        }
-
-        .btn {
-            display: inline-block;
-            padding: 0.5rem 1rem;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.9rem;
-            border: none;
-            transition: all 0.3s ease;
-        }
-
-        .btn-primary {
-            background-color: #007BFF;
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background-color: #0056b3;
-        }
-
-        .btn-danger {
-            background-color: #dc3545;
-            color: white;
-        }
-
-        .btn-danger:hover {
-            background-color: #c82333;
-        }
-
-        .btn-warning {
-            background-color: #ffc107;
-            color: #000;
-        }
-
-        .btn-warning:hover {
-            background-color: #e0a800;
-        }
-
-        .share-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .modal-content {
-            background-color: white;
-            padding: 2rem;
-            border-radius: 8px;
-            width: 90%;
-            max-width: 500px;
-        }
-
-        .modal-header {
-            margin-bottom: 1.5rem;
-        }
-
-        .modal-title {
-            margin: 0;
-            color: #333;
-        }
-
-        .close-button {
-            position: absolute;
-            right: 1.5rem;
-            top: 1rem;
-            font-size: 1.5rem;
-            cursor: pointer;
-            color: #666;
-        }
-
-        .form-group {
-            margin-bottom: 1rem;
-        }
-
-        .form-control {
-            width: 100%;
-            padding: 0.5rem;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 1rem;
-        }
-
-        .action-buttons {
-            display: flex;
-            gap: 0.5rem;
-        }
-
-        .file-size {
-            color: #666;
-        }
-
-        .alert {
-            padding: 1rem;
-            margin-bottom: 1rem;
-            border: 1px solid transparent;
-            border-radius: 4px;
-        }
-
-        .alert-danger {
-            color: #721c24;
-            background-color: #f8d7da;
-            border-color: #f5c6cb;
-        }
-
-        .alert-info {
-            color: #0c5460;
-            background-color: #d1ecf1;
-            border-color: #bee5eb;
-        }
-
-        .mt-4 {
-            margin-top: 2rem;
-        }
-    </style>
+    <title th:text="#{app.title}">Dosya Yönetimi</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
 
-<!-- Navbar -->
 <div class="navbar">
-    <a href="/" class="logo">Dosya Yönetimi</a>
+    <a href="/" class="logo" th:text="#{app.title}">Dosya Yönetimi</a>
     <div class="menu">
-        <div sec:authorize="!isAuthenticated()">
-            <a href="/login">Giriş Yap</a>
-            <a href="/register">Kayıt Ol</a>
+        <div class="language-selector">
+            <select onchange="changeLanguage(this.value)">
+                <option value="tr" th:selected="${#locale.toString() == 'tr'}" th:text="#{language.tr}">Türkçe</option>
+                <option value="en" th:selected="${#locale.toString() == 'en'}" th:text="#{language.en}">English</option>
+            </select>
         </div>
-        <div sec:authorize="isAuthenticated()">
+        <button class="theme-toggle" onclick="toggleTheme()">
+            <i class="fas fa-sun" id="theme-icon"></i>
+            <span id="theme-text" th:text="#{app.theme.light}">Tema Değiştir</span>
+        </button>
+        <div sec:authorize="!isAuthenticated()">
+            <a href="/login" th:text="#{nav.login}">Giriş Yap</a>
+            <a href="/register" th:text="#{nav.register}">Kayıt Ol</a>
+        </div>
+        <div sec:authorize="isAuthenticated()" class="auth-buttons">
+            <a href="/upload" th:text="#{nav.upload}">Dosya Yükle</a>
             <form th:action="@{/logout}" method="post" class="logout-form">
-                <button type="submit" class="logout-button">Çıkış Yap</button>
+                <button type="submit" class="logout-button" th:text="#{nav.logout}">Çıkış Yap</button>
             </form>
         </div>
     </div>
 </div>
 
-<!-- İçerik -->
 <div class="content">
-    <div class="files-container">
-        <h2>Yüklenen Dosyalar</h2>
+    <div th:if="${message}" class="alert" th:classappend="${message.contains('başarı') ? 'alert-info' : 'alert-danger'}"
+         th:text="${message}"></div>
+
+    <div th:if="${files.empty}" class="empty-state">
+        <h2 th:text="#{home.no.files}">Henüz Dosyanız Yok</h2>
+        <p th:text="#{home.upload.prompt}">Dosya yüklemek için "Dosya Yükle" butonuna tıklayın.</p>
+        <a href="/upload" class="btn btn-primary" th:text="#{nav.upload}">Dosya Yükle</a>
+    </div>
+
+    <table th:if="${!files.empty}" class="files-table">
+        <thead>
+            <tr>
+                <th th:text="#{table.filename}">Dosya Adı</th>
+                <th th:text="#{table.size}">Boyut</th>
+                <th th:text="#{table.upload.date}">Yükleme Tarihi</th>
+                <th th:text="#{table.actions}">İşlemler</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="file : ${files}">
+                <td th:text="${file.originalFilename}"></td>
+                <td th:text="${#numbers.formatDecimal(file.size / 1024, 0, 2) + ' KB'}"></td>
+                <td th:text="${#temporals.format(file.uploadDate, 'dd/MM/yyyy HH:mm')}"></td>
+                <td class="action-buttons">
+                    <a th:href="@{/uploads/{id}(id=${file.id})}" class="btn btn-primary" download th:text="#{table.download}">İndir</a>
+                    <button class="btn btn-primary" 
+                            th:onclick="'showShareModal(\'' + ${file.fileName} + '\')'" th:text="#{table.share}">Paylaş</button>
+                    <form th:action="@{/delete/{id}(id=${file.id})}" method="post" style="display: inline;">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                        <button type="submit" class="btn btn-danger" 
+                                th:onclick="'return confirm(\'' + #{table.delete.confirm} + '\')'"
+                                th:text="#{table.delete}">Sil</button>
+                    </form>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div th:if="${totalPages > 1}" class="pagination">
+        <a th:if="${currentPage > 0}" th:href="@{/list(page=${currentPage - 1})}" 
+           class="btn btn-primary" th:text="'&laquo; ' + #{pagination.previous}">Önceki</a>
         
-        <!-- Hata ve Mesaj Gösterimi -->
-        <div th:if="${error}" class="alert alert-danger" role="alert" th:text="${error}"></div>
-        <div th:if="${message}" class="alert alert-info" role="alert" th:text="${message}"></div>
+        <span th:each="i: ${#numbers.sequence(0, totalPages - 1)}">
+            <a th:if="${i != currentPage}" th:href="@{/list(page=${i})}" 
+               class="btn btn-outline-primary" th:text="${i + 1}"></a>
+            <span th:if="${i == currentPage}" class="btn btn-primary" th:text="${i + 1}"></span>
+        </span>
         
-        <table class="table">
-            <thead>
-                <tr>
-                    <th scope="col">Dosya Numarası</th>
-                    <th scope="col">Dosya Adı</th>
-                    <th scope="col">Dosya Tipi</th>
-                    <th scope="col">Dosya Boyutu</th>
-                    <th scope="col">İndir</th>
-                    <th scope="col">Sil</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr th:each="file : ${files}">
-                    <td th:text="${file.id}"></td>
-                    <td th:text="${file.fileName}"></td>
-                    <td th:text="${file.fileType}"></td>
-                    <td th:text="${file.size}"></td>
-                    <td>
-                        <a th:href="@{/uploads/{filename}(filename=${file.fileName})}" class="btn btn-primary btn-sm">İndir</a>
-                    </td>
-                    <td>
-                        <form th:action="@{/delete/{id}(id=${file.id})}" method="post" style="display:inline;">
-                            <button type="submit" class="btn btn-danger btn-sm"
-                                    onclick="return confirm('Dosyayı silmek istediğinize emin misiniz?')">
-                                Sil
-                            </button>
-                        </form>
-                    </td>
-                    <td>
-                        <form th:action="@{/share}" method="post" style="display: inline;">
-                            <input type="hidden" name="filename" th:value="${file.fileName}" />
-                            <input type="email" name="email" placeholder="Alıcının maili" required />
-                            <button type="submit" class="btn btn-warning btn-sm">Paylaş</button>
-                        </form>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-        
-        <!-- Dosya Yükleme Butonu -->
-        <div class="mt-4">
-            <a href="/upload" class="btn btn-primary">Yeni Dosya Yükle</a>
-        </div>
+        <a th:if="${currentPage < totalPages - 1}" th:href="@{/list(page=${currentPage + 1})}" 
+           class="btn btn-primary" th:text="#{pagination.next} + ' &raquo;'">Sonraki</a>
     </div>
 </div>
 
-<!-- Paylaşım Modal -->
 <div id="shareModal" class="share-modal">
     <div class="modal-content">
-        <div class="modal-header">
-            <h3 class="modal-title">Dosya Paylaş</h3>
-            <span class="close-button" onclick="closeShareModal()">&times;</span>
-        </div>
-        <form id="shareForm" th:action="@{/share}" method="post">
-            <input type="hidden" id="shareFileId" name="fileId">
-            <input type="hidden" id="shareFileName" name="filename">
-            <div class="form-group">
-                <label for="username">Kullanıcı Adı:</label>
-                <input type="text" id="username" name="username" class="form-control" required
-                       placeholder="Paylaşmak istediğiniz kullanıcının adını girin">
-            </div>
-            <div class="form-group">
-                <button type="submit" class="btn btn-primary">Paylaş</button>
-                <button type="button" class="btn btn-danger" onclick="closeShareModal()">İptal</button>
+        <h3 th:text="#{share.title}">Dosya Paylaş</h3>
+        <form action="/share" method="post">
+            <input type="hidden" id="shareFilename" name="filename">
+            <input type="email" name="email" th:placeholder="#{share.email}" required>
+            <div class="modal-buttons">
+                <button type="button" class="btn btn-danger" onclick="hideShareModal()" th:text="#{share.cancel}">İptal</button>
+                <button type="submit" class="btn btn-primary" th:text="#{share.button}">Paylaş</button>
             </div>
         </form>
     </div>
 </div>
 
-<script>
-    function openShareModal(fileId, fileName) {
+<script th:inline="javascript">
+    // Dil değiştirme fonksiyonu
+    function changeLanguage(lang) {
+        const url = new URL(window.location.href);
+        url.searchParams.set('lang', lang);
+        window.location.href = url.toString();
+    }
+
+    // Tema tercihi için localStorage kullan
+    function setTheme(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('theme', theme);
+        
+        // Icon ve metin güncelleme
+        const themeIcon = document.getElementById('theme-icon');
+        const themeText = document.getElementById('theme-text');
+        
+        if (theme === 'dark') {
+            themeIcon.className = 'fas fa-moon';
+            themeText.textContent = /*[[#{app.theme.dark}]]*/ 'Açık Mod';
+        } else {
+            themeIcon.className = 'fas fa-sun';
+            themeText.textContent = /*[[#{app.theme.light}]]*/ 'Koyu Mod';
+        }
+    }
+
+    function toggleTheme() {
+        const currentTheme = localStorage.getItem('theme') || 'light';
+        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+        setTheme(newTheme);
+    }
+
+    // Sayfa yüklendiğinde tema tercihini kontrol et
+    document.addEventListener('DOMContentLoaded', () => {
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        setTheme(savedTheme);
+    });
+
+    // Modal fonksiyonları
+    function showShareModal(filename) {
         document.getElementById('shareModal').style.display = 'flex';
-        document.getElementById('shareFileId').value = fileId;
-        document.getElementById('shareFileName').value = fileName;
+        document.getElementById('shareFilename').value = filename;
     }
 
-    function closeShareModal() {
+    function hideShareModal() {
         document.getElementById('shareModal').style.display = 'none';
-        document.getElementById('shareForm').reset();
     }
 
-    // Modal dışına tıklandığında kapatma
+    // Modal dışına tıklandığında modalı kapat
     window.onclick = function(event) {
-        const modal = document.getElementById('shareModal');
+        var modal = document.getElementById('shareModal');
         if (event.target == modal) {
-            closeShareModal();
+            hideShareModal();
         }
     }
 </script>
