@@ -3,6 +3,7 @@ package com.example.dropboxproject.controller;
 import com.example.dropboxproject.model.FileModel;
 import com.example.dropboxproject.model.FolderModel;
 import com.example.dropboxproject.model.UserModel;
+import com.example.dropboxproject.repository.FileRepository;
 import com.example.dropboxproject.repository.UserRepository;
 import com.example.dropboxproject.service.FileService;
 import com.example.dropboxproject.service.FolderService;
@@ -23,6 +24,8 @@ import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.Principal;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -41,7 +44,7 @@ public class FileController {
 
     private final FileService fileService;
     private final FolderService folderService;
-    
+
     @Autowired
     private UserRepository userRepository;
 
@@ -379,6 +382,17 @@ public class FileController {
                 .body("Error previewing file: " + e.getMessage());
         }
     }
+    @GetMapping("/search")
+    @ResponseBody
+    public Page<FileModel> searchFilesAjax(@RequestParam("keyword") String keyword,
+                                           @RequestParam(defaultValue = "0") int page,
+                                           @RequestParam(defaultValue = "5") int size) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+        return fileService.searchUserFilesByName(username, keyword, page, size);
+    }
+
+
 }
 
 class FilePreviewInfo {

@@ -8,6 +8,7 @@ import com.example.dropboxproject.repository.UserRepository;
 import jakarta.annotation.PostConstruct;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -42,7 +43,12 @@ public class FileService {
     
     @Value("${app.upload.dir:./uploads}")
     private String uploadDir;
-    
+
+    public void setUploadDir(String uploadDir) {
+        this.uploadDir = uploadDir;
+    }
+
+
     private Path rootLocation;
 
     public FileService(FileRepository fileRepository, UserRepository userRepository, JavaMailSender mailSender) {
@@ -226,6 +232,12 @@ public class FileService {
         Path filePath = rootLocation.resolve(file.getFileName());
         return new String(Files.readAllBytes(filePath));
     }
+
+    public Page<FileModel> searchUserFilesByName(String username, String keyword, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return fileRepository.findByUser_UsernameAndFileNameContainingIgnoreCase(username, keyword, pageable);
+    }
+
 }
 
 

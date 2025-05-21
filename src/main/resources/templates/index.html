@@ -12,6 +12,13 @@
 
 <div class="navbar">
     <a href="/" class="logo" th:text="#{app.title}">Dosya Yönetimi</a>
+
+    <!-- Arama Kutusu -->
+    <div class="search-container" style="position: relative;">
+        <input type="text" id="searchInput" placeholder="Dosya ara..." autocomplete="on" />
+        <ul id="fileResults" style="position: absolute; top: 100%; left: 0; background: white; border: 1px solid #ccc; z-index: 999; list-style: none; padding: 0; margin: 0; width: 100%; max-height: 200px; overflow-y: auto;"></ul>
+    </div>
+
     <div class="menu">
         <div class="language-selector">
             <select onchange="changeLanguage(this.value)">
@@ -391,6 +398,50 @@
         const i = Math.floor(Math.log(bytes) / Math.log(k));
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     }
+
+    const input = document.getElementById('searchInput');
+    const resultsList = document.getElementById('fileResults');
+
+    input.addEventListener('input', async function () {
+        const keyword = input.value.trim();
+        if (keyword.length < 2) {
+            resultsList.innerHTML = '';
+            return;
+        }
+
+        const response = await fetch(`/search?keyword=${encodeURIComponent(keyword)}&page=0&size=5`, {
+            credentials: 'same-origin'
+        });
+
+        if (!response.ok) {
+            console.error('Arama isteği başarısız oldu.');
+            return;
+        }
+
+        const data = await response.json();
+        const files = data.content;
+
+        resultsList.innerHTML = '';
+
+        if (files.length === 0) {
+            const li = document.createElement('li');
+            li.textContent = 'Sonuç bulunamadı.';
+            li.style.padding = '8px';
+            resultsList.appendChild(li);
+            return;
+        }
+
+        files.forEach(file => {
+            const li = document.createElement('li');
+            li.textContent = file.fileName;
+            li.style.padding = '8px';
+            li.style.cursor = 'pointer';
+            li.addEventListener('click', () => {
+                window.location.href = `/files/${file.id}`; // ID'ye göre dosya sayfasına yönlendirme
+            });
+            resultsList.appendChild(li);
+        });
+    });
 </script>
 
 <style>
